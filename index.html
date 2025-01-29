@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Blockchain Messaging System</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            margin: 20px;
+            background: #1a1a1a;
+            color: #fff;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .panel {
+            background: #2a2a2a;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        .button {
+            background: #4CAF50;
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        input, textarea {
+            width: 100%;
+            padding: 8px;
+            margin: 5px 0;
+            background: #333;
+            border: 1px solid #444;
+            color: white;
+            border-radius: 4px;
+        }
+        #messageHistory {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .message {
+            padding: 10px;
+            margin: 5px 0;
+            background: #333;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Blockchain Messaging System</h1>
+        
+        <div class="panel" id="loginPanel">
+            <h2>Login / Register</h2>
+            <input type="text" id="username" placeholder="Username">
+            <input type="password" id="password" placeholder="Password">
+            <button class="button" onclick="login()">Login</button>
+            <button class="button" onclick="register()">Register</button>
+        </div>
+
+        <div class="panel" id="messagePanel" style="display: none;">
+            <h2>Send Message</h2>
+            <input type="text" id="recipient" placeholder="Recipient Username">
+            <textarea id="messageContent" placeholder="Message"></textarea>
+            <button class="button" onclick="sendMessage()">Send</button>
+            
+            <h2>Message History</h2>
+            <div id="messageHistory"></div>
+        </div>
+
+        <div id="status" class="panel"></div>
+    </div>
+
+    <script src="blockchain.js"></script>
+    <script>
+        let chain = new Blockchain();
+        let currentUser = null;
+
+        function register() {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            try {
+                const keys = chain.registerUser(username, password);
+                document.getElementById('status').textContent = 'Registration successful';
+            } catch (e) {
+                document.getElementById('status').textContent = e.message;
+            }
+        }
+
+        function login() {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            try {
+                const user = chain.authenticateUser(username, password);
+                currentUser = username;
+                document.getElementById('loginPanel').style.display = 'none';
+                document.getElementById('messagePanel').style.display = 'block';
+                updateMessageHistory();
+            } catch (e) {
+                document.getElementById('status').textContent = e.message;
+            }
+        }
+
+        function sendMessage() {
+            const recipient = document.getElementById('recipient').value;
+            const message = document.getElementById('messageContent').value;
+            try {
+                chain.sendMessage(currentUser, recipient, message);
+                document.getElementById('status').textContent = 'Message sent';
+                document.getElementById('messageContent').value = '';
+                updateMessageHistory();
+            } catch (e) {
+                document.getElementById('status').textContent = e.message;
+            }
+        }
+
+        function updateMessageHistory() {
+            const history = chain.getMessages(currentUser, document.getElementById('password').value);
+            const historyDiv = document.getElementById('messageHistory');
+            historyDiv.innerHTML = history.map(msg => `
+                <div class="message">
+                    <strong>From: ${msg.from}</strong><br>
+                    ${msg.message}<br>
+                    <small>${new Date(msg.timestamp).toLocaleString()}</small>
+                </div>
+            `).join('');
+        }
+    </script>
+</body>
+</html>
